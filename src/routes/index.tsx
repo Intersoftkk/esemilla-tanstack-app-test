@@ -1,14 +1,34 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Button } from '#/components/ui/button'
+import { useAuth } from '#/lib/auth/hooks'
 
 export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
+  const { tenant, user } = useAuth()
+
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">Welcome to TanStack Start</h1>
-      <p className="mt-4 text-lg">
-        Edit <code>src/routes/index.tsx</code> to get started.
+    <main className="mx-auto max-w-3xl px-4 py-20 text-center">
+      <h1 className="font-heading text-3xl font-bold">Welcome to {tenant?.name}</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
+        {user ? `Signed in as ${user.email}` : 'Sign in to access your workspace.'}
       </p>
-    </div>
+      <div className="mt-8 flex justify-center gap-2">
+        {user ? (
+          <Button size="lg" asChild>
+            <Link to="/dashboard">Go to dashboard</Link>
+          </Button>
+        ) : (
+          <>
+            <Button size="lg" asChild>
+              <Link to="/login">Log in</Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/register">Create account</Link>
+            </Button>
+          </>
+        )}
+      </div>
+    </main>
   )
 }

@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "mock:api": "node scripts/mock-laravel.mjs"
   },
   "dependencies": {
     "@faker-js/faker": "^10.3.0",

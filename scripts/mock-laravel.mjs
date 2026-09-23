@@ -28,6 +28,18 @@ const users = [
 ]
 /** token -> { id, userId, tenantId, name, ip, ua, created, lastUsed } */
 const tokens = new Map()
+
+const features = [
+  { id: 1, slug: 'projects', name: 'Unlimited projects', description: 'Create as many projects as you need.' },
+  { id: 2, slug: 'sso', name: 'Single sign-on', description: 'SAML / OIDC SSO for your whole team.' },
+  { id: 3, slug: 'audit-log', name: 'Audit log', description: 'Every change, who made it and when.' },
+  { id: 4, slug: 'priority-support', name: 'Priority support', description: '24/7 support with a 1h response SLA.' },
+]
+const plans = [
+  { id: 1, slug: 'free', name: 'Free', price: 0, currency: 'USD', interval: 'month', description: 'For individuals getting started.', features: [{ slug: 'projects', name: 'Unlimited projects' }] },
+  { id: 2, slug: 'pro', name: 'Pro', price: 19, currency: 'USD', interval: 'month', is_popular: true, description: 'For growing teams.', features: [{ slug: 'projects', name: 'Unlimited projects' }, { slug: 'audit-log', name: 'Audit log' }] },
+  { id: 3, slug: 'enterprise', name: 'Enterprise', price: null, currency: 'USD', interval: null, description: 'Security and support at scale.', features: features.map(({ slug, name }) => ({ slug, name })) },
+]
 const prefs = new Map()
 
 const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, email_verified_at: null })
@@ -111,10 +123,20 @@ createServer(async (req, res) => {
     return send(res, 201, { user: publicUser(u), token: issueToken(u, req, body.device_name) })
   }
   if (method === 'POST' && path === 'v1/user/forgot-password') {
-    return send(res, 200, { message: 'We have emailed your password reset link.' })
+    return send(res, 200, { message: 'We have emailed your password reset code (mock: 123456).' })
   }
   if (method === 'POST' && path === 'v1/user/reset-password') {
-    if (body.token !== 'valid') return validation(res, { email: ['This password reset token is invalid.'] })
+    // Link mode: token 'valid'. OTP mode: code 123456 (sent as token/otp/code).
+    const code = body.otp ?? body.code ?? body.token
+    if (code !== 'valid' && code !== '123456') {
+      return validation(res, { otp: ['The code is invalid or has expired.'] })
+    }
+    const u = users.find((x) => x.tenant_id === tenant.id && x.email === body.email)
+    if (!u) return validation(res, { email: ["We can't find a user with that email address."] })
+    if (body.password !== body.password_confirmation) {
+      return validation(res, { password: ['The password field confirmation does not match.'] })
+    }
+    u.password = body.password
     return send(res, 200, { message: 'Your password has been reset.' })
   }
   const social = path.match(/^v1\/user\/auth\/([a-z]+)$/)
@@ -132,6 +154,27 @@ createServer(async (req, res) => {
     return send(res, 200, { user: publicUser(u), token: issueToken(u, req, url.searchParams.get('device_name')) })
   }
 
+  const socialTok = path.match(/^v1\/user\/auth\/([a-z]+)\/token$/)
+  if (method === 'POST' && socialTok) {
+    if (!body.access_token && !body.token) return validation(res, { access_token: ['The access token field is required.'] })
+    const u = users.find((x) => x.tenant_id === tenant.id)
+    return send(res, 200, { user: publicUser(u), token: issueToken(u, req, body.device_name) })
+  }
+
+  // ---- public catalogue ---------------------------------------------------
+  if (method === 'GET' && path === 'v1/plans') return send(res, 200, { data: plans })
+  if (method === 'GET' && path === 'v1/features') return send(res, 200, { data: features })
+  const planSlug = path.match(/^v1\/plans\/([\w-]+)$/)
+  if (method === 'GET' && planSlug) {
+    const p = plans.find((x) => x.slug === planSlug[1])
+    return p ? send(res, 200, { data: p }) : send(res, 404, { message: 'Plan not found.' })
+  }
+  const featureSlug = path.match(/^v1\/features\/([\w-]+)$/)
+  if (method === 'GET' && featureSlug) {
+    const f = features.find((x) => x.slug === featureSlug[1])
+    return f ? send(res, 200, { data: f }) : send(res, 404, { message: 'Feature not found.' })
+  }
+
   // ---- authenticated ------------------------------------------------------
   const auth = req.headers.authorization?.replace(/^Bearer /, '')
   const tok = auth && tokens.get(auth)
@@ -139,50 +182,10 @@ createServer(async (req, res) => {
   tok.lastUsed = new Date().toISOString()
   const user = users.find((u) => u.id === tok.userId)
 
-  if (path === 'v1/user/me') {
-    if (method === 'GET') return send(res, 200, { data: publicUser(user) })
-    if (method === 'PUT' || method === 'PATCH') {
-      if (body.name !== undefined && !body.name) return validation(res, { name: ['The name field is required.'] })
-      Object.assign(user, body.name ? { name: body.name } : {}, body.email ? { email: body.email } : {})
-      return send(res, 200, { message: 'Profile updated.', data: publicUser(user) })
-    }
-    if (method === 'DELETE') return send(res, 200, { message: 'We sent a confirmation code (use 123456).' })
-  }
-  if (method === 'POST' && path === 'v1/user/me/delete/confirm') {
-    if (body.code !== '123456') return validation(res, { code: ['Invalid code.'] })
-    users.splice(users.indexOf(user), 1)
-    for (const [k, v] of tokens) if (v.userId === user.id) tokens.delete(k)
-    return send(res, 200, { message: 'Account deleted.' })
-  }
+  if (method === 'GET' && path === 'v1/user/me') return send(res, 200, { data: publicUser(user) })
   if (method === 'POST' && path === 'v1/user/logout') {
     tokens.delete(auth)
     return send(res, 200, { message: 'Logged out.' })
-  }
-  if (method === 'POST' && path === 'v1/user/logout-all') {
-    for (const [k, v] of tokens) if (v.userId === user.id) tokens.delete(k)
-    return send(res, 200, { message: 'Logged out everywhere.' })
-  }
-  if (method === 'POST' && path === 'v1/user/refresh-token') {
-    tokens.delete(auth)
-    return send(res, 200, { token: issueToken(user, req, tok.name), expires_in: 3600 * 24 * 7 })
-  }
-  if (path === 'v1/user/sessions' && method === 'GET') {
-    const list = [...tokens.entries()]
-      .filter(([, v]) => v.userId === user.id)
-      .map(([k, v]) => ({
-        id: v.id, name: v.name, ip_address: v.ip, user_agent: v.ua,
-        last_used_at: v.lastUsed, created_at: v.created, is_current: k === auth,
-      }))
-    return send(res, 200, { data: list })
-  }
-  if (path === 'v1/user/sessions' && method === 'DELETE') {
-    for (const [k, v] of tokens) if (v.userId === user.id && k !== auth) tokens.delete(k)
-    return send(res, 200, { message: 'Other sessions revoked.' })
-  }
-  const sess = path.match(/^v1\/user\/sessions\/(\d+)$/)
-  if (sess && method === 'DELETE') {
-    for (const [k, v] of tokens) if (v.userId === user.id && String(v.id) === sess[1]) tokens.delete(k)
-    return send(res, 200, { message: 'Session revoked.' })
   }
   if (method === 'POST' && path === 'v1/user/change-password') {
     if (body.current_password !== user.password) {
@@ -193,10 +196,13 @@ createServer(async (req, res) => {
   }
   if (method === 'POST' && path === 'v1/user/password/confirm') {
     if (body.password !== user.password) return validation(res, { password: ['The password is incorrect.'] })
+    tok.confirmedAt = Date.now()
     return send(res, 200, { message: 'Password confirmed.' })
   }
   if (method === 'GET' && path === 'v1/user/password/status') {
-    return send(res, 200, { data: { has_password: true, confirmed_recently: false } })
+    return send(res, 200, {
+      data: { has_password: true, confirmed_recently: Date.now() - (tok.confirmedAt ?? 0) < 3 * 60 * 60 * 1000 },
+    })
   }
   if (path === 'v1/user/notifications/preferences') {
     const current = prefs.get(user.id) ?? { email_marketing: false, email_security: true, push: true }

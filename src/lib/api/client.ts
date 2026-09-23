@@ -51,7 +51,7 @@ export async function apiRequest<T = unknown>(
   if (typeof window === 'undefined') {
     throw new Error(
       'lib/api/client is browser-only. On the server use a server function ' +
-        '(see src/lib/api/server-fn.ts) or getApi() from session.server.ts.',
+        '(authedServerFn in features/auth/utils/auth.functions.ts) or getApi() from auth.server.ts.',
     )
   }
 

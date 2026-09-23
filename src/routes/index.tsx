@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Button } from '#/components/ui/button'
-import { useAuth } from '#/lib/auth/hooks'
+import { useAuth } from '#/features/auth/hooks/use-auth'
 
 export const Route = createFileRoute('/')({ component: Home })
 
@@ -21,10 +21,10 @@ function Home() {
         ) : (
           <>
             <Button size="lg" asChild>
-              <Link to="/login">Log in</Link>
+              <Link to="/sign-in">Sign in</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/register">Create account</Link>
+              <Link to="/sign-up">Create account</Link>
             </Button>
           </>
         )}

@@ -13,7 +13,7 @@ export interface AuthCookiePayload {
   token: string
   /** Tenant id the token was issued for (prevents cross-tenant replay). */
   tenantId: string
-  /** Token expiry, epoch ms, or null. */
+  /** Token expiry (epoch ms) if Laravel returned one, else null. */
   expiresAt: number | null
   /** Persistent ("remember me") vs browser-session cookie. */
   remember: boolean
@@ -51,7 +51,8 @@ function fromBase64Url(str: string): Uint8Array<ArrayBuffer> {
   return out
 }
 
-export async function seal(payload: AuthCookiePayload): Promise<string> {
+/** Encrypt + authenticate any JSON value. */
+export async function sealJson(payload: unknown): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const cipher = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
@@ -61,7 +62,8 @@ export async function seal(payload: AuthCookiePayload): Promise<string> {
   return `v1.${toBase64Url(iv)}.${toBase64Url(new Uint8Array(cipher))}`
 }
 
-export async function unseal(value: string): Promise<AuthCookiePayload | null> {
+/** Decrypt + verify a value produced by `sealJson` (null if tampered). */
+export async function unsealJson<T>(value: string): Promise<T | null> {
   try {
     const [version, iv, data] = value.split('.')
     if (version !== 'v1' || !iv || !data) return null
@@ -70,18 +72,22 @@ export async function unseal(value: string): Promise<AuthCookiePayload | null> {
       await getKey(),
       fromBase64Url(data),
     )
-    const parsed = JSON.parse(decoder.decode(plain)) as AuthCookiePayload
-    return typeof parsed?.token === 'string' ? parsed : null
+    return JSON.parse(decoder.decode(plain)) as T
   } catch {
     return null
   }
+}
+
+async function unsealAuth(value: string): Promise<AuthCookiePayload | null> {
+  const parsed = await unsealJson<AuthCookiePayload>(value)
+  return typeof parsed?.token === 'string' ? parsed : null
 }
 
 // ---------------------------------------------------------------------------
 // Cookie IO (works inside server functions, middleware and server routes)
 // ---------------------------------------------------------------------------
 
-function cookieOptions(remember: boolean) {
+export function cookieOptions(remember: boolean) {
   return {
     httpOnly: true,
     secure: config.cookie.secure,
@@ -95,14 +101,14 @@ function cookieOptions(remember: boolean) {
 export async function readAuthCookie(): Promise<AuthCookiePayload | null> {
   const raw = getCookie(config.cookie.name)
   if (!raw) return null
-  return unseal(raw)
+  return unsealAuth(raw)
 }
 
 export async function writeAuthCookie(
   payload: Omit<AuthCookiePayload, 'iat'> & { iat?: number },
 ): Promise<void> {
   const full: AuthCookiePayload = { ...payload, iat: payload.iat ?? Date.now() }
-  setCookie(config.cookie.name, await seal(full), cookieOptions(full.remember))
+  setCookie(config.cookie.name, await sealJson(full), cookieOptions(full.remember))
 }
 
 export function clearAuthCookie(): void {

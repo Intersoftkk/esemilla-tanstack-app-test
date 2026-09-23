@@ -50,15 +50,6 @@ export const env = createEnv({
      */
     DEV_TENANT_DOMAIN: z.string().min(1).optional(),
 
-    /**
-     * Refresh the Sanctum token (POST v1/user/refresh-token) when it expires
-     * within this many seconds. Only used if Laravel returns an expiry.
-     */
-    TOKEN_REFRESH_THRESHOLD: z.coerce
-      .number()
-      .int()
-      .nonnegative()
-      .default(60 * 60 * 24),
 
     /** Timeout for calls from this server to Laravel (ms). */
     LARAVEL_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
@@ -74,6 +65,12 @@ export const env = createEnv({
     VITE_APP_TITLE: z.string().min(1).optional(),
     /** Comma separated list of enabled social providers, e.g. "google,github" */
     VITE_SOCIAL_PROVIDERS: z.string().optional(),
+    /**
+     * How `forgot-password` works on your Laravel side:
+     *  - "otp"  : Laravel emails a code -> user enters it on /otp -> /reset-password
+     *  - "link" : Laravel emails a link to /reset-password?token=...&email=...
+     */
+    VITE_PASSWORD_RESET_MODE: z.enum(['otp', 'link']).default('otp'),
   },
 
   /**

@@ -15,10 +15,13 @@ import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as GuestForgotPasswordRouteImport } from './routes/_guest/forgot-password'
-import { Route as GuestLoginRouteImport } from './routes/_guest/login'
-import { Route as GuestRegisterRouteImport } from './routes/_guest/register'
+import { Route as GuestOtpRouteImport } from './routes/_guest/otp'
 import { Route as GuestResetPasswordRouteImport } from './routes/_guest/reset-password'
+import { Route as GuestSignInRouteImport } from './routes/_guest/sign-in'
+import { Route as GuestSignUpRouteImport } from './routes/_guest/sign-up'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as PlansIndexRouteImport } from './routes/plans/index'
+import { Route as PlansSlugRouteImport } from './routes/plans/$slug'
 import { Route as AuthCallbackProviderRouteImport } from './routes/auth/callback.$provider'
 import { Route as AuthRedirectProviderRouteImport } from './routes/auth/redirect.$provider'
 
@@ -50,14 +53,9 @@ const GuestForgotPasswordRoute = GuestForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => GuestRoute,
 } as any)
-const GuestLoginRoute = GuestLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestRegisterRoute = GuestRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const GuestOtpRoute = GuestOtpRouteImport.update({
+  id: '/otp',
+  path: '/otp',
   getParentRoute: () => GuestRoute,
 } as any)
 const GuestResetPasswordRoute = GuestResetPasswordRouteImport.update({
@@ -65,9 +63,29 @@ const GuestResetPasswordRoute = GuestResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => GuestRoute,
 } as any)
+const GuestSignInRoute = GuestSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => GuestRoute,
+} as any)
+const GuestSignUpRoute = GuestSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => GuestRoute,
+} as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
   id: '/api/$',
   path: '/api/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansIndexRoute = PlansIndexRouteImport.update({
+  id: '/plans/',
+  path: '/plans/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansSlugRoute = PlansSlugRouteImport.update({
+  id: '/plans/$slug',
+  path: '/plans/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackProviderRoute = AuthCallbackProviderRouteImport.update({
@@ -86,10 +104,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/settings': typeof AuthedSettingsRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
-  '/login': typeof GuestLoginRoute
-  '/register': typeof GuestRegisterRoute
+  '/otp': typeof GuestOtpRoute
   '/reset-password': typeof GuestResetPasswordRoute
+  '/sign-in': typeof GuestSignInRoute
+  '/sign-up': typeof GuestSignUpRoute
   '/api/$': typeof ApiSplatRoute
+  '/plans/$slug': typeof PlansSlugRoute
+  '/plans/': typeof PlansIndexRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/auth/redirect/$provider': typeof AuthRedirectProviderRoute
 }
@@ -98,10 +119,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/settings': typeof AuthedSettingsRoute
   '/forgot-password': typeof GuestForgotPasswordRoute
-  '/login': typeof GuestLoginRoute
-  '/register': typeof GuestRegisterRoute
+  '/otp': typeof GuestOtpRoute
   '/reset-password': typeof GuestResetPasswordRoute
+  '/sign-in': typeof GuestSignInRoute
+  '/sign-up': typeof GuestSignUpRoute
   '/api/$': typeof ApiSplatRoute
+  '/plans/$slug': typeof PlansSlugRoute
+  '/plans': typeof PlansIndexRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/auth/redirect/$provider': typeof AuthRedirectProviderRoute
 }
@@ -113,10 +137,13 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/settings': typeof AuthedSettingsRoute
   '/_guest/forgot-password': typeof GuestForgotPasswordRoute
-  '/_guest/login': typeof GuestLoginRoute
-  '/_guest/register': typeof GuestRegisterRoute
+  '/_guest/otp': typeof GuestOtpRoute
   '/_guest/reset-password': typeof GuestResetPasswordRoute
+  '/_guest/sign-in': typeof GuestSignInRoute
+  '/_guest/sign-up': typeof GuestSignUpRoute
   '/api/$': typeof ApiSplatRoute
+  '/plans/$slug': typeof PlansSlugRoute
+  '/plans/': typeof PlansIndexRoute
   '/auth/callback/$provider': typeof AuthCallbackProviderRoute
   '/auth/redirect/$provider': typeof AuthRedirectProviderRoute
 }
@@ -127,10 +154,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/forgot-password'
-    | '/login'
-    | '/register'
+    | '/otp'
     | '/reset-password'
+    | '/sign-in'
+    | '/sign-up'
     | '/api/$'
+    | '/plans/$slug'
+    | '/plans/'
     | '/auth/callback/$provider'
     | '/auth/redirect/$provider'
   fileRoutesByTo: FileRoutesByTo
@@ -139,10 +169,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/forgot-password'
-    | '/login'
-    | '/register'
+    | '/otp'
     | '/reset-password'
+    | '/sign-in'
+    | '/sign-up'
     | '/api/$'
+    | '/plans/$slug'
+    | '/plans'
     | '/auth/callback/$provider'
     | '/auth/redirect/$provider'
   id:
@@ -153,10 +186,13 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/settings'
     | '/_guest/forgot-password'
-    | '/_guest/login'
-    | '/_guest/register'
+    | '/_guest/otp'
     | '/_guest/reset-password'
+    | '/_guest/sign-in'
+    | '/_guest/sign-up'
     | '/api/$'
+    | '/plans/$slug'
+    | '/plans/'
     | '/auth/callback/$provider'
     | '/auth/redirect/$provider'
   fileRoutesById: FileRoutesById
@@ -166,6 +202,8 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   GuestRoute: typeof GuestRouteWithChildren
   ApiSplatRoute: typeof ApiSplatRoute
+  PlansSlugRoute: typeof PlansSlugRoute
+  PlansIndexRoute: typeof PlansIndexRoute
   AuthCallbackProviderRoute: typeof AuthCallbackProviderRoute
   AuthRedirectProviderRoute: typeof AuthRedirectProviderRoute
 }
@@ -214,18 +252,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestForgotPasswordRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/_guest/login': {
-      id: '/_guest/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof GuestLoginRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/register': {
-      id: '/_guest/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof GuestRegisterRouteImport
+    '/_guest/otp': {
+      id: '/_guest/otp'
+      path: '/otp'
+      fullPath: '/otp'
+      preLoaderRoute: typeof GuestOtpRouteImport
       parentRoute: typeof GuestRoute
     }
     '/_guest/reset-password': {
@@ -235,11 +266,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestResetPasswordRouteImport
       parentRoute: typeof GuestRoute
     }
+    '/_guest/sign-in': {
+      id: '/_guest/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof GuestSignInRouteImport
+      parentRoute: typeof GuestRoute
+    }
+    '/_guest/sign-up': {
+      id: '/_guest/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof GuestSignUpRouteImport
+      parentRoute: typeof GuestRoute
+    }
     '/api/$': {
       id: '/api/$'
       path: '/api/$'
       fullPath: '/api/$'
       preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans/': {
+      id: '/plans/'
+      path: '/plans'
+      fullPath: '/plans/'
+      preLoaderRoute: typeof PlansIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans/$slug': {
+      id: '/plans/$slug'
+      path: '/plans/$slug'
+      fullPath: '/plans/$slug'
+      preLoaderRoute: typeof PlansSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback/$provider': {
@@ -274,16 +333,18 @@ const AuthedRouteWithChildren =
 
 interface GuestRouteChildren {
   GuestForgotPasswordRoute: typeof GuestForgotPasswordRoute
-  GuestLoginRoute: typeof GuestLoginRoute
-  GuestRegisterRoute: typeof GuestRegisterRoute
+  GuestOtpRoute: typeof GuestOtpRoute
   GuestResetPasswordRoute: typeof GuestResetPasswordRoute
+  GuestSignInRoute: typeof GuestSignInRoute
+  GuestSignUpRoute: typeof GuestSignUpRoute
 }
 
 const GuestRouteChildren: GuestRouteChildren = {
   GuestForgotPasswordRoute: GuestForgotPasswordRoute,
-  GuestLoginRoute: GuestLoginRoute,
-  GuestRegisterRoute: GuestRegisterRoute,
+  GuestOtpRoute: GuestOtpRoute,
   GuestResetPasswordRoute: GuestResetPasswordRoute,
+  GuestSignInRoute: GuestSignInRoute,
+  GuestSignUpRoute: GuestSignUpRoute,
 }
 
 const GuestRouteWithChildren = GuestRoute._addFileChildren(GuestRouteChildren)
@@ -293,6 +354,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   GuestRoute: GuestRouteWithChildren,
   ApiSplatRoute: ApiSplatRoute,
+  PlansSlugRoute: PlansSlugRoute,
+  PlansIndexRoute: PlansIndexRoute,
   AuthCallbackProviderRoute: AuthCallbackProviderRoute,
   AuthRedirectProviderRoute: AuthRedirectProviderRoute,
 }

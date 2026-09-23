@@ -5,7 +5,7 @@ Welcome to your new TanStack Start app!
 >
 > ```bash
 > cp .env.example .env && npm run mock:api & npm run dev
-> # login: demo@acme.test / password
+> # sign in at /sign-in: demo@acme.test / password (reset code in mock: 123456)
 > ```
 
 # Getting Started

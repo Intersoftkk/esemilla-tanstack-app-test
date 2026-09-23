@@ -50,9 +50,5 @@ export const config = {
     secret: env.SESSION_SECRET,
   },
 
-  auth: {
-    refreshThresholdMs: env.TOKEN_REFRESH_THRESHOLD * 1000,
-  },
-
   trustProxy: env.TRUST_PROXY,
 } as const

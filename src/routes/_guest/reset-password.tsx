@@ -1,93 +1,34 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { z } from 'zod'
-import {
-  AuthCard,
-  Field,
-  FormAlert,
-  fieldErrorsFrom,
-  formValues,
-} from '#/components/auth/form'
-import { Button } from '#/components/ui/button'
-import { useResetPassword } from '#/lib/auth/hooks'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { pendingResetQueryOptions } from '#/features/auth/queries/auth.queries'
+import { ResetPassword } from '#/features/auth/reset-password'
+import { getPasswordResetMode } from '#/features/auth/utils/auth'
+
+const str = (v: unknown) => (typeof v === 'string' && v.length ? v : undefined)
 
 /**
- * Laravel's reset link should point to:
- *   https://<tenant-domain>/reset-password?token=...&email=...
- * (see ResetPassword::createUrlUsing in the README).
+ * Step 3. Two modes (VITE_PASSWORD_RESET_MODE):
+ *  - otp  : email + code come from the encrypted pending-reset cookie
+ *  - link : /reset-password?token=...&email=... (Laravel's default e-mail link)
  */
 export const Route = createFileRoute('/_guest/reset-password')({
-  validateSearch: z.object({
-    token: z.string().optional(),
-    email: z.string().optional(),
+  validateSearch: (s: Record<string, unknown>): { token?: string; email?: string } => ({
+    token: str(s.token),
+    email: str(s.email),
   }),
+  loaderDeps: ({ search }) => search,
+  loader: async ({ context, deps }) => {
+    const mode = getPasswordResetMode()
+    if (mode === 'link' || deps.token) {
+      return { mode: 'link' as const, email: deps.email ?? '', token: deps.token }
+    }
+    const pending = await context.queryClient.fetchQuery({ ...pendingResetQueryOptions(), staleTime: 0 })
+    if (!pending) throw redirect({ to: '/forgot-password' })
+    if (!pending.hasCode) throw redirect({ to: '/otp' })
+    return { mode: 'otp' as const, email: pending.email, token: undefined }
+  },
   head: () => ({ meta: [{ title: 'Reset password' }] }),
-  component: ResetPasswordPage,
+  component: function ResetPasswordRoute() {
+    const data = Route.useLoaderData()
+    return <ResetPassword {...data} />
+  },
 })
-
-function ResetPasswordPage() {
-  const search = Route.useSearch()
-  const navigate = useNavigate()
-  const reset = useResetPassword()
-  const errors = fieldErrorsFrom(reset.error)
-
-  if (!search.token) {
-    return (
-      <AuthCard title="Invalid reset link" description="This password reset link is invalid or has expired.">
-        <Button asChild size="lg" className="h-9 w-full">
-          <Link to="/forgot-password">Request a new link</Link>
-        </Button>
-      </AuthCard>
-    )
-  }
-
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const { get } = formValues(e.currentTarget)
-    reset.mutate(
-      {
-        token: search.token ?? '',
-        email: get('email'),
-        password: get('password'),
-        password_confirmation: get('password_confirmation'),
-      },
-      { onSuccess: () => navigate({ to: '/login', search: { reset: '1' } }) },
-    )
-  }
-
-  return (
-    <AuthCard title="Choose a new password">
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormAlert error={reset.error} />
-        <Field
-          label="Email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          defaultValue={search.email}
-          required
-          error={errors.email ?? errors.token}
-        />
-        <Field
-          label="New password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          autoFocus
-          error={errors.password}
-        />
-        <Field
-          label="Confirm password"
-          name="password_confirmation"
-          type="password"
-          autoComplete="new-password"
-          required
-          error={errors.password_confirmation}
-        />
-        <Button type="submit" size="lg" className="h-9 w-full" disabled={reset.isPending}>
-          {reset.isPending ? 'Saving…' : 'Reset password'}
-        </Button>
-      </form>
-    </AuthCard>
-  )
-}

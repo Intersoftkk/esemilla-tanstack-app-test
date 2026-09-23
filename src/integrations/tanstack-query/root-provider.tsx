@@ -1,11 +1,11 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 import { isApiError } from '#/lib/api/errors'
-import { authKeys } from '#/lib/auth/queries'
+import { authKeys } from '#/features/auth/queries/auth.keys'
 
 export function getContext() {
   const onError = (error: unknown) => {
     // Token expired/revoked while the app was open -> refresh session state,
-    // which makes `_authed` routes redirect to /login.
+    // which makes `_authed` routes redirect to /sign-in.
     if (
       typeof window !== 'undefined' &&
       isApiError(error) &&

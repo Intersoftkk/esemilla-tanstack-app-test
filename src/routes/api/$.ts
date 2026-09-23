@@ -17,17 +17,17 @@ import { isApiError } from '#/lib/api/errors'
 import { buildLaravelHeaders, buildLaravelUrl } from '#/server/laravel.server'
 import { config } from '#/server/config.server'
 import { isSameOriginRequest } from '#/server/request.server'
-import { forgetToken, getToken, requireTenant } from '#/server/session.server'
+import { forgetToken, getToken, requireTenant } from '#/features/auth/utils/auth.server'
 
 /**
  * Endpoints that issue/rotate tokens must go through server functions
- * (src/lib/auth/functions.ts) so the token lands in the HttpOnly cookie
+ * (src/features/auth/utils/auth.functions.ts) so the token lands in the HttpOnly cookie
  * instead of being exposed to the browser.
  */
 const BLOCKED = [
-  /^v1\/user\/(login|register|refresh-token)$/,
+  /^v1\/user\/(login|register)$/,
   /^v1\/user\/auth\//,
-  /^v1\/user\/logout(-all)?$/,
+  /^v1\/user\/logout$/,
   /^v1\/tenants\//,
 ]
 

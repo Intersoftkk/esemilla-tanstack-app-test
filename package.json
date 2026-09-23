@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "mock:api": "node scripts/mock-laravel.mjs"
   },
   "dependencies": {
     "@faker-js/faker": "^10.3.0",
@@ -42,6 +43,7 @@
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
     "highlight.js": "^11.11.1",
+    "input-otp": "^1.5.0",
     "lucide-react": "^0.577.0",
     "nitro": "3.0.260610-beta",
     "radix-ui": "^1.6.7",

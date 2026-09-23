@@ -1,5 +1,13 @@
 Welcome to your new TanStack Start app!
 
+> **Multi-tenant auth (Laravel Sanctum):** see [`docs/AUTH.md`](docs/AUTH.md) for
+> the architecture, API usage (server-side + client-side) and required Laravel setup.
+>
+> ```bash
+> cp .env.example .env && npm run mock:api & npm run dev
+> # sign in at /sign-in: demo@acme.test / password (reset code in mock: 123456)
+> ```
+
 # Getting Started
 
 To run this application:
